@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createClient } from '../client';
+import { bearerAuth } from '../auth';
 import {
   mockSection,
   mockSectionGraphQLError,
@@ -9,7 +10,7 @@ import {
   mockSectionsHttpError,
 } from './server';
 
-const client = createClient({ token: 'test-token' });
+const client = createClient({ project: 'test', auth: bearerAuth('test-token') });
 
 describe('sections.get', () => {
   it('fetches a section by slug', async () => {
