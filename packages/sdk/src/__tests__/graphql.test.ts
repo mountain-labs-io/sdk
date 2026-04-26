@@ -74,6 +74,24 @@ describe('merge', () => {
     });
   });
 
+  describe('field arguments', () => {
+    it('preserves a simple field argument', () => {
+      expect(merge('section(ref: {slug: "intro"}) { slug }', '')).toBe(
+        'section(ref: { slug: "intro" }) { slug __typename } __typename',
+      );
+    });
+
+    it('merges children of fields with the same name and arguments', () => {
+      expect(merge('section(ref: {slug: "intro"}) { slug }', 'section(ref: {slug: "intro"}) { name }')).toBe(
+        'section(ref: { slug: "intro" }) { slug name __typename } __typename',
+      );
+    });
+
+    it('preserves arguments on leaf fields', () => {
+      expect(merge('image(width: 800)', '')).toBe('image(width: 800) __typename');
+    });
+  });
+
   it('matches the example from the spec', () => {
     expect(merge('slug title author { email }', 'pageInfo { hasNextPage endCursor }')).toBe(
       'slug title author { email __typename } pageInfo { hasNextPage endCursor __typename } __typename',

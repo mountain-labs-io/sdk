@@ -12,8 +12,10 @@ export function createClient(options: ClientOptions) {
 
   const fetchFn = options.fetch ?? ((...args: Parameters<typeof fetch>) => globalThis.fetch(...args));
 
+  const pages = new PagesResource(endpoint, headers, fetchFn);
+
   return {
-    pages: new PagesResource(endpoint, headers, fetchFn),
-    sections: new SectionsResource(endpoint, headers),
+    pages,
+    sections: new SectionsResource(pages),
   };
 }
