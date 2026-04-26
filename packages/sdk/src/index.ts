@@ -1,2 +1,2 @@
 export { createClient } from './client';
-export type { ClientOptions } from './types';
+export type { ClientOptions, Page, PageId, QueryOptions } from './types';

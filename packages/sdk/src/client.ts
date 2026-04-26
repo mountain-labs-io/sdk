@@ -10,8 +10,10 @@ export function createClient(options: ClientOptions) {
     'Content-Type': 'application/json',
   };
 
+  const fetchFn = options.fetch ?? ((...args: Parameters<typeof fetch>) => globalThis.fetch(...args));
+
   return {
-    pages: new PagesResource(baseUrl, headers),
+    pages: new PagesResource(baseUrl, headers, fetchFn),
     sections: new SectionsResource(baseUrl, headers),
   };
 }
