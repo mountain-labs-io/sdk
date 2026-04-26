@@ -1,4 +1,4 @@
-import type { Page, QueryOptions } from '../types';
+import type { PageListOptions, Page, QueryOptions } from '../types';
 
 const DEFAULT_FIELDS = `slug title publishedAt`;
 
@@ -8,6 +8,30 @@ export class PagesResource {
     private readonly headers: Record<string, string>,
     private readonly fetch: typeof globalThis.fetch,
   ) {}
+
+  async *list<T = Page>(options?: PageListOptions): AsyncIterable<T> {
+    const fields = options?.fields ?? DEFAULT_FIELDS;
+    const query = `query ListPages($connection: ConnectionArgs, $directory: String) { pages(connection: $connection, directory: $directory) { edges { node { ${fields} } } pageInfo { hasNextPage endCursor } } }`;
+
+    let cursor: string | undefined;
+
+    do {
+      const result = await this.request<{
+        pages: {
+          edges: Array<{ node: T }>;
+          pageInfo: { hasNextPage: boolean; endCursor: string | null };
+        };
+      }>(query, { connection: { cursor, size: options?.size }, directory: options?.directory });
+
+      for (const edge of result.pages.edges) {
+        yield edge.node;
+      }
+
+      cursor = result.pages.pageInfo.hasNextPage
+        ? (result.pages.pageInfo.endCursor ?? undefined)
+        : undefined;
+    } while (cursor !== undefined);
+  }
 
   async get<T = Page>(ref: string, options?: QueryOptions): Promise<T> {
     const fields = options?.fields ?? DEFAULT_FIELDS;
