@@ -1,26 +1,53 @@
 {
   "name": "@mountain-labs/sdk",
-  "version": "0.0.1",
-  "description": "TypeScript SDK for Mountain Labs CMS",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the Mountain Labs headless CMS API",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mountain-labs-io/js-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": [
+    "mountain-labs",
+    "headless-cms",
+    "cms",
+    "sdk",
+    "graphql",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     }
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "release": "npm run build && npm publish"
   },
   "devDependencies": {
     "msw": "^2.13.6",
