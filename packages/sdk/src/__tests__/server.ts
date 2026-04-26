@@ -56,7 +56,7 @@ type SectionResolver = (variables: GetSectionVariables, request: Request) => Par
 
 export function mockSection(dataOrResolver: Partial<Section> | SectionResolver | null, pageFound = true): void {
   server.use(
-    graphql.query('GetPage', ({ variables, request }) => {
+    graphql.query('GetSection', ({ variables, request }) => {
       if (!pageFound) return HttpResponse.json({ data: { page: null } });
       const section =
         typeof dataOrResolver === 'function'
@@ -69,13 +69,13 @@ export function mockSection(dataOrResolver: Partial<Section> | SectionResolver |
 
 export function mockSectionGraphQLError(message: string): void {
   server.use(
-    graphql.query('GetPage', () => HttpResponse.json({ errors: [{ message }] })),
+    graphql.query('GetSection', () => HttpResponse.json({ errors: [{ message }] })),
   );
 }
 
 export function mockSectionHttpError(status: number): void {
   server.use(
-    graphql.query('GetPage', () => new HttpResponse(null, { status })),
+    graphql.query('GetSection', () => new HttpResponse(null, { status })),
   );
 }
 
@@ -85,7 +85,7 @@ type SectionsResolver = (variables: ListSectionsVariables, request: Request) => 
 
 export function mockSections(dataOrResolver: SectionEdges | SectionsResolver | null): void {
   server.use(
-    graphql.query('GetPage', ({ variables, request }) => {
+    graphql.query('ListSections', ({ variables, request }) => {
       if (dataOrResolver === null) return HttpResponse.json({ data: { page: null } });
       const sections =
         typeof dataOrResolver === 'function'
@@ -98,12 +98,12 @@ export function mockSections(dataOrResolver: SectionEdges | SectionsResolver | n
 
 export function mockSectionsGraphQLError(message: string): void {
   server.use(
-    graphql.query('GetPage', () => HttpResponse.json({ errors: [{ message }] })),
+    graphql.query('ListSections', () => HttpResponse.json({ errors: [{ message }] })),
   );
 }
 
 export function mockSectionsHttpError(status: number): void {
   server.use(
-    graphql.query('GetPage', () => new HttpResponse(null, { status })),
+    graphql.query('ListSections', () => new HttpResponse(null, { status })),
   );
 }

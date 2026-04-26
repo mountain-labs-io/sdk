@@ -104,6 +104,23 @@ export function fields(input: string): string {
 }
 
 /**
+ * Resolves QueryOptions into the constituent parts needed to build a query:
+ * processed node fields, operation name, variable declarations, and variable values.
+ */
+export function resolveOptions(
+  options: { fields?: string; operationName?: string; variables?: Record<string, { type: string; value: unknown }> } | undefined,
+  defaults: { fields: string; operationName: string },
+): { nodeFields: string; opName: string; decls: string; values: Record<string, unknown> } {
+  const { decls, values } = buildExtraVars(options?.variables);
+  return {
+    nodeFields: fields(options?.fields ?? defaults.fields),
+    opName: options?.operationName ?? defaults.operationName,
+    decls,
+    values,
+  };
+}
+
+/**
  * Builds a SlugOrId input object from a string, using the given ID prefix to
  * distinguish IDs from slugs.
  */

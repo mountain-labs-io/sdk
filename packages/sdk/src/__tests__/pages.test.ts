@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { graphql, HttpResponse } from 'msw';
 import { createClient } from '../client';
-import { mockPage, mockPageGraphQLError, mockPageHttpError, mockPages } from './server';
+import { mockPage, mockPageGraphQLError, mockPageHttpError, mockPages, server } from './server';
 
 const client = createClient({ token: 'test-token' });
 
@@ -55,6 +56,21 @@ describe('pages.get', () => {
     const page = await client.pages.get<{ title: string }>('home', { fields: 'title' });
 
     expect(page.title).toBe('Home');
+  });
+
+  it('supports a custom operation name', async () => {
+    let query = '';
+
+    server.use(
+      graphql.query('FetchHomePage', ({ request }) => {
+        request.json().then((body: unknown) => { query = (body as { query: string }).query; });
+        return HttpResponse.json({ data: { page: { slug: 'home', title: 'Home', publishedAt: null } } });
+      }),
+    );
+
+    await client.pages.get('home', { operationName: 'FetchHomePage' });
+
+    expect(query).toContain('query FetchHomePage(');
   });
 
   it('always includes __typename in the query', async () => {

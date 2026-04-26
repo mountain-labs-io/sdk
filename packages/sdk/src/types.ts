@@ -24,6 +24,7 @@ export interface Section {
 
 export interface QueryOptions {
   fields?: string;
+  operationName?: string;
   variables?: Record<string, { type: string; value: unknown }>;
 }
 
