@@ -1,2 +1,3 @@
 export { createClient } from './client';
-export type { ClientOptions, PageListOptions, Page, PageId, QueryOptions } from './types';
+export { bearerAuth, clientCredentials } from './auth';
+export type { ClientOptions, PageListOptions, Page, PageId, Section, QueryOptions, AuthInterceptor, AuthInterceptorContext } from './types';

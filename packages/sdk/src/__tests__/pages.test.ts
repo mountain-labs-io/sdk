@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { graphql, HttpResponse } from 'msw';
 import { createClient } from '../client';
+import { bearerAuth } from '../auth';
 import { mockPage, mockPageGraphQLError, mockPageHttpError, mockPages, server } from './server';
 
-const client = createClient({ token: 'test-token' });
+const client = createClient({ project: 'test', auth: bearerAuth('test-token') });
 
 describe('pages.get', () => {
   it('fetches a page by slug', async () => {
