@@ -2,14 +2,12 @@ import type { PageListOptions, Page, QueryOptions } from '../types';
 import { buildConnection, paginate } from '../utils/paginate';
 import { resolveOptions, buildRef } from '../utils/graphql';
 
+type RequestFn = <T>(query: string, variables?: Record<string, unknown>) => Promise<T>;
+
 const DEFAULT_FIELDS = `slug title publishedAt`;
 
 export class PagesResource {
-  constructor(
-    private readonly endpoint: string,
-    private readonly headers: Record<string, string>,
-    private readonly fetch: typeof globalThis.fetch,
-  ) {}
+  constructor(private readonly request: RequestFn) {}
 
   async readMarkdown(pageRef: string): Promise<string> {
     const page = await this.get<{ sections: { edges: Array<{ node: { __typename: string; markdown?: string } }> } }>(pageRef, {
@@ -43,29 +41,5 @@ export class PagesResource {
     }
 
     return result.page;
-  }
-
-  private async request<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-    const response = await this.fetch(this.endpoint, {
-      method: 'POST',
-      headers: this.headers,
-      body: JSON.stringify({ query, variables }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Request failed: ${response.status} ${response.statusText}`);
-    }
-
-    const json = await response.json() as { data?: T; errors?: Array<{ message: string }> };
-
-    if (json.errors?.length) {
-      throw new Error(json.errors.map((e) => e.message).join(', '));
-    }
-
-    if (!json.data) {
-      throw new Error('Unexpected empty response');
-    }
-
-    return json.data;
   }
 }

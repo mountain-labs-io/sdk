@@ -121,6 +121,40 @@ export function resolveOptions(
 }
 
 /**
+ * Executes a GraphQL request and returns the `data` field, throwing on HTTP
+ * errors, GraphQL errors, or an empty response.
+ */
+export async function request<T>(
+  endpoint: string,
+  headers: Record<string, string>,
+  fetchFn: typeof globalThis.fetch,
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const response = await fetchFn(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ query, variables }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const json = await response.json() as { data?: T; errors?: Array<{ message: string }> };
+
+  if (json.errors?.length) {
+    throw new Error(json.errors.map((e) => e.message).join(', '));
+  }
+
+  if (!json.data) {
+    throw new Error('Unexpected empty response');
+  }
+
+  return json.data;
+}
+
+/**
  * Builds a SlugOrId input object from a string, using the given ID prefix to
  * distinguish IDs from slugs.
  */
