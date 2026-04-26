@@ -16,12 +16,17 @@ export class PagesResource {
     let cursor: string | undefined;
 
     do {
+      const connection =
+        cursor !== undefined || options?.size !== undefined
+          ? { cursor, size: options?.size }
+          : undefined;
+
       const result = await this.request<{
         pages: {
           edges: Array<{ node: T }>;
           pageInfo: { hasNextPage: boolean; endCursor: string | null };
         };
-      }>(query, { connection: { cursor, size: options?.size }, directory: options?.directory });
+      }>(query, { connection, directory: options?.directory });
 
       for (const edge of result.pages.edges) {
         yield edge.node;
