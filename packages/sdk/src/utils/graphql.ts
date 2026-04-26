@@ -1,17 +1,32 @@
 type Field = {
   name: string;
+  args?: string;
   children: Field[];
 };
 
 function parse(input: string): Field[] {
-  const tokens = input.match(/[{}]|[^\s{}]+/g) ?? [];
+  const tokens = input.match(/[{}()]|[^\s{}()]+/g) ?? [];
   let i = 0;
+
+  function parseArgs(): string {
+    i++; // consume '('
+    let depth = 1;
+    const parts: string[] = [];
+    while (i < tokens.length && depth > 0) {
+      const tok = tokens[i++];
+      if (tok === '(') depth++;
+      else if (tok === ')') { depth--; if (depth === 0) break; }
+      parts.push(tok);
+    }
+    return parts.join(' ');
+  }
 
   function parseFields(): Field[] {
     const fields: Field[] = [];
 
     while (i < tokens.length && tokens[i] !== '}') {
       let name = tokens[i++];
+      let args: string | undefined;
       let children: Field[] = [];
 
       // Inline fragment: ... on TypeName { fields }
@@ -20,13 +35,18 @@ function parse(input: string): Field[] {
         name = `... on ${tokens[i++]}`; // consume TypeName
       }
 
+      // Field arguments
+      if (tokens[i] === '(') {
+        args = parseArgs();
+      }
+
       if (tokens[i] === '{') {
         i++; // consume '{'
         children = parseFields();
         i++; // consume '}'
       }
 
-      fields.push({ name, children });
+      fields.push({ name, args, children });
     }
 
     return fields;
@@ -53,7 +73,10 @@ function mergeFields(a: Field[], b: Field[]): Field[] {
 function print(fields: Field[]): string {
   const parts = fields
     .filter((f) => f.name !== '__typename')
-    .map((f) => (f.children.length > 0 ? `${f.name} { ${print(f.children)} }` : f.name));
+    .map((f) => {
+      const head = f.args !== undefined ? `${f.name}(${f.args})` : f.name;
+      return f.children.length > 0 ? `${head} { ${print(f.children)} }` : head;
+    });
   parts.push('__typename');
   return parts.join(' ');
 }
@@ -78,4 +101,27 @@ export function merge(a: string, b: string): string {
  */
 export function fields(input: string): string {
   return merge(input, '');
+}
+
+/**
+ * Builds a SlugOrId input object from a string, using the given ID prefix to
+ * distinguish IDs from slugs.
+ */
+export function buildRef(value: string, idPrefix: string): { id: string } | { slug: string } {
+  return value.startsWith(idPrefix) ? { id: value } : { slug: value };
+}
+
+/**
+ * Extracts variable declarations and values from a QueryOptions-style variables
+ * map, ready to splice into a query string and variables object respectively.
+ */
+export function buildExtraVars(variables: Record<string, { type: string; value: unknown }> = {}): {
+  decls: string;
+  values: Record<string, unknown>;
+} {
+  const entries = Object.entries(variables);
+  return {
+    decls: entries.map(([name, { type }]) => `, $${name}: ${type}`).join(''),
+    values: Object.fromEntries(entries.map(([name, { value }]) => [name, value])),
+  };
 }

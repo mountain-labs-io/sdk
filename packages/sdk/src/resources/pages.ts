@@ -1,6 +1,6 @@
 import type { PageListOptions, Page, QueryOptions } from '../types';
 import { buildConnection, paginate } from '../utils/paginate';
-import { fields } from '../utils/graphql';
+import { fields, buildRef, buildExtraVars } from '../utils/graphql';
 
 const DEFAULT_FIELDS = `slug title publishedAt`;
 
@@ -24,9 +24,9 @@ export class PagesResource {
 
   async get<T = Page>(ref: string, options?: QueryOptions): Promise<T> {
     const nodeFields = fields(options?.fields ?? DEFAULT_FIELDS);
-    const query = `query GetPage($ref: SlugOrId!) { page(ref: $ref) { ${nodeFields} } }`;
-    const refVar = ref.startsWith('page_') ? { id: ref } : { slug: ref };
-    const result = await this.request<{ page: T | null }>(query, { ref: refVar });
+    const { decls, values } = buildExtraVars(options?.variables);
+    const query = `query GetPage($ref: SlugOrId!${decls}) { page(ref: $ref) { ${nodeFields} } }`;
+    const result = await this.request<{ page: T | null }>(query, { ref: buildRef(ref, 'page_'), ...values });
 
     if (!result.page) {
       throw new Error(`Page not found: ${ref}`);

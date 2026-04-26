@@ -14,8 +14,17 @@ export interface Page {
   publishedAt: string | null;
 }
 
+export type SectionId = string & { readonly __brand: 'SectionId' };
+
+export interface Section {
+  id: SectionId;
+  slug: string;
+  name: string;
+}
+
 export interface QueryOptions {
   fields?: string;
+  variables?: Record<string, { type: string; value: unknown }>;
 }
 
 export interface PageListOptions extends QueryOptions {
