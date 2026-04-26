@@ -11,6 +11,17 @@ export class PagesResource {
     private readonly fetch: typeof globalThis.fetch,
   ) {}
 
+  async readMarkdown(pageRef: string): Promise<string> {
+    const page = await this.get<{ sections: { edges: Array<{ node: { __typename: string; markdown?: string } }> } }>(pageRef, {
+      fields: `sections { edges { node { ... on TextSection { markdown } } } }`,
+    });
+    return page.sections.edges
+      .map((e) => e.node)
+      .filter((n): n is { __typename: 'TextSection'; markdown: string } => n.__typename === 'TextSection')
+      .map((n) => n.markdown)
+      .join('\n\n');
+  }
+
   async *list<T = Page>(options?: PageListOptions): AsyncIterable<T> {
     const nodeFields = fields(options?.fields ?? DEFAULT_FIELDS);
     const query = `query ListPages($connection: ConnectionArgs, $directory: String) { pages(connection: $connection, directory: $directory) { edges { node { ${nodeFields} } } pageInfo { hasNextPage endCursor } } }`;

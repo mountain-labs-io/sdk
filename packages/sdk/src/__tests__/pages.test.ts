@@ -224,3 +224,72 @@ describe('pages.list', () => {
     expect(authHeader).toBe('Bearer test-token');
   });
 });
+
+describe('pages.readMarkdown', () => {
+  function mockPageMarkdown(edges: Array<{ node: { __typename: string; markdown?: string } }>) {
+    mockPage({ sections: { edges } } as never);
+  }
+
+  it('returns concatenated markdown from text sections', async () => {
+    mockPageMarkdown([
+      { node: { __typename: 'TextSection', markdown: '# Hello' } },
+      { node: { __typename: 'TextSection', markdown: 'Some body text.' } },
+    ]);
+
+    const result = await client.pages.readMarkdown('home');
+
+    expect(result).toBe('# Hello\n\nSome body text.');
+  });
+
+  it('skips non-text sections', async () => {
+    mockPageMarkdown([
+      { node: { __typename: 'GroupSection' } },
+      { node: { __typename: 'TextSection', markdown: '# Hello' } },
+      { node: { __typename: 'GroupSection' } },
+      { node: { __typename: 'TextSection', markdown: 'Body.' } },
+    ]);
+
+    const result = await client.pages.readMarkdown('home');
+
+    expect(result).toBe('# Hello\n\nBody.');
+  });
+
+  it('preserves depth-first order', async () => {
+    mockPageMarkdown([
+      { node: { __typename: 'GroupSection' } },
+      { node: { __typename: 'TextSection', markdown: 'Intro.' } },
+      { node: { __typename: 'TextSection', markdown: 'Body.' } },
+      { node: { __typename: 'TextSection', markdown: 'Footer.' } },
+    ]);
+
+    const result = await client.pages.readMarkdown('home');
+
+    expect(result).toBe('Intro.\n\nBody.\n\nFooter.');
+  });
+
+  it('returns an empty string for a page with no text sections', async () => {
+    mockPageMarkdown([]);
+
+    const result = await client.pages.readMarkdown('home');
+
+    expect(result).toBe('');
+  });
+
+  it('throws when page is not found', async () => {
+    mockPage(null);
+
+    await expect(client.pages.readMarkdown('missing')).rejects.toThrow('Page not found: missing');
+  });
+
+  it('throws on GraphQL errors', async () => {
+    mockPageGraphQLError('Unauthorised');
+
+    await expect(client.pages.readMarkdown('home')).rejects.toThrow('Unauthorised');
+  });
+
+  it('throws on HTTP errors', async () => {
+    mockPageHttpError(401);
+
+    await expect(client.pages.readMarkdown('home')).rejects.toThrow('401');
+  });
+});
