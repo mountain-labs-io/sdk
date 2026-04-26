@@ -1,0 +1,5 @@
+{
+  "name": "mountain-labs-sdk-repo",
+  "private": true,
+  "workspaces": ["packages/*"]
+}
