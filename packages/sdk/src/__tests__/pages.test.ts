@@ -57,6 +57,32 @@ describe('pages.get', () => {
     expect(page.title).toBe('Home');
   });
 
+  it('always includes __typename in the query', async () => {
+    let query = '';
+
+    mockPage((_, request) => {
+      request.json().then((body: { query: string }) => { query = body.query; });
+      return { slug: 'home', title: 'Home', publishedAt: null };
+    });
+
+    await client.pages.get('home');
+
+    expect(query).toContain('__typename');
+  });
+
+  it('deduplicates __typename when caller includes it', async () => {
+    let query = '';
+
+    mockPage((_, request) => {
+      request.json().then((body: { query: string }) => { query = body.query; });
+      return { slug: 'home', title: 'Home' };
+    });
+
+    await client.pages.get('home', { fields: 'slug title __typename' });
+
+    expect(query.match(/__typename/g)).toHaveLength(1);
+  });
+
   it('throws when page is not found', async () => {
     mockPage(null);
 
@@ -144,6 +170,19 @@ describe('pages.list', () => {
     }
 
     expect(pages[0].slug).toBe('home');
+  });
+
+  it('always includes __typename in the query', async () => {
+    let query = '';
+
+    mockPages((_, request) => {
+      request.json().then((body: { query: string }) => { query = body.query; });
+      return { edges: [], pageInfo: { hasNextPage: false, endCursor: null } };
+    });
+
+    for await (const _ of client.pages.list()) { /* empty */ }
+
+    expect(query).toContain('__typename');
   });
 
   it('sends the directory option', async () => {

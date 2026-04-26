@@ -1,5 +1,6 @@
 import type { PageListOptions, Page, QueryOptions } from '../types';
 import { buildConnection, paginate } from '../utils/paginate';
+import { fields } from '../utils/graphql';
 
 const DEFAULT_FIELDS = `slug title publishedAt`;
 
@@ -11,8 +12,8 @@ export class PagesResource {
   ) {}
 
   async *list<T = Page>(options?: PageListOptions): AsyncIterable<T> {
-    const fields = options?.fields ?? DEFAULT_FIELDS;
-    const query = `query ListPages($connection: ConnectionArgs, $directory: String) { pages(connection: $connection, directory: $directory) { edges { node { ${fields} } } pageInfo { hasNextPage endCursor } } }`;
+    const nodeFields = fields(options?.fields ?? DEFAULT_FIELDS);
+    const query = `query ListPages($connection: ConnectionArgs, $directory: String) { pages(connection: $connection, directory: $directory) { edges { node { ${nodeFields} } } pageInfo { hasNextPage endCursor } } }`;
 
     yield* paginate<T>(async (cursor) => {
       const connection = buildConnection(cursor, options?.size);
@@ -22,8 +23,8 @@ export class PagesResource {
   }
 
   async get<T = Page>(ref: string, options?: QueryOptions): Promise<T> {
-    const fields = options?.fields ?? DEFAULT_FIELDS;
-    const query = `query GetPage($ref: SlugOrId!) { page(ref: $ref) { ${fields} } }`;
+    const nodeFields = fields(options?.fields ?? DEFAULT_FIELDS);
+    const query = `query GetPage($ref: SlugOrId!) { page(ref: $ref) { ${nodeFields} } }`;
     const refVar = ref.startsWith('page_') ? { id: ref } : { slug: ref };
     const result = await this.request<{ page: T | null }>(query, { ref: refVar });
 
