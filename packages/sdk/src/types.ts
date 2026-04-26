@@ -1,6 +1,7 @@
 export interface ClientOptions {
   token: string;
   baseUrl?: string;
+  path?: string;
   fetch?: typeof globalThis.fetch;
 }
 

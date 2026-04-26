@@ -4,7 +4,7 @@ const DEFAULT_FIELDS = `slug title publishedAt`;
 
 export class PagesResource {
   constructor(
-    private readonly baseUrl: string,
+    private readonly endpoint: string,
     private readonly headers: Record<string, string>,
     private readonly fetch: typeof globalThis.fetch,
   ) {}
@@ -23,7 +23,7 @@ export class PagesResource {
   }
 
   private async request<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-    const response = await this.fetch(`${this.baseUrl}/graphql`, {
+    const response = await this.fetch(this.endpoint, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify({ query, variables }),
