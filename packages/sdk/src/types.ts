@@ -17,3 +17,8 @@ export interface Page {
 export interface QueryOptions {
   fields?: string;
 }
+
+export interface PageListOptions extends QueryOptions {
+  directory?: string;
+  size?: number;
+}
